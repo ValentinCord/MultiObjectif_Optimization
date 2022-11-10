@@ -1,18 +1,21 @@
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <iostream>
 using namespace std;
 
 void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
-void print_A(vector<vector<pair<int, int>>> A);
+void print_A(vector<pair<vector<pair<int, int>>, vector<int>>> A);
 void problem_init(string input_file, int objectif_number, int costs[32][8]);
 vector<int> eval_x(vector<pair<int, int>> x);
 vector<pair<int, int>> generate_random_solution();
 bool dominate(vector<int> obj1, vector<int> obj_prime);
+vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x);
+bool equal_obj(vector<int> obj, vector<int> obj_prime);
+bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
 
 const int problem_size = 8;
 const int objectif_number = 2;
@@ -29,7 +32,7 @@ int main()
     vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
 
     // Generation aleatoire de l archive
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 5; i++)
     {
         vector<pair<int, int>> x = generate_random_solution();
         vector<int> y = eval_x(x);
@@ -37,34 +40,107 @@ int main()
     }
 
     // Pareto Local Search Algorithm
+    cout << "Pareto Local Search Algorithm ..." << endl;
     P = A;
     P_a.clear();
-
-    while (P.empty())
-    { // condition mauvaise
-        for (int i = 0; i < P.size(); i++)
+    while (!P.empty())
+    { 
+        cout << "A size : " << P.size() << endl;
+        for (int i = 0; i < P.size(); i++) // P[i].first est la solution courante x
         {
-            // Recherche du voisinage de la solution P[i]
-            // Bouble sur tout le voisinage
-            // Si non x' non dominé par x
-            // Et si l'objectif de x' différent de l'objectif de x
-            // Update(A, x')
+            vector<pair<int, int>> x = P[i].first;
+            vector<int> y = P[i].second;
+
+            vector<vector<pair<int, int>>> N = vertical_neighborhood(P[i].first);
+
+            for (int j = 0; j < N.size(); j++) // N[j] est la solution courante x_prime
+            {
+                vector<pair<int, int>> x_prime = N[j];
+                vector<int> y_prime = eval_x(N[j]);
+
+                if (!dominate(y, y_prime) && !equal_obj(y, y_prime))
+                {
+                    if (update(A, x_prime))
+                    {
+                        P_a.push_back(make_pair(x_prime, y_prime));
+                    }
+                }
+            }
         }
+        P = P_a;
+        P_a.clear();
     };
-    // ----------------------------------------------
+
     cout << "end" << endl;
     return 1;
 }
 
-// sol -> [(i,j), ()]
-// func evaluer entrer tab[i][j] et boucler sur tous les objectifs
-// recherche locale inverser les i ou les j
-// Algo ->
-// dominance si la solution est dominée ou pas dans l'archive
 
-// function that return true if a solution x dominate x_prime
-bool dominate(vector<int> obj, vector<int> obj_prime)
+bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime)
 {
+    // x_prime est-il dominé par une solution de l archive
+    // Si oui, on ne fait rien
+    for(int i = 0; i < A.size(); i++) 
+    {
+        vector<int> y = A[i].second;
+        vector<int> y_prime = eval_x(x_prime);
+        if (dominate(y, y_prime))
+        {
+            return false;
+        }
+    }
+
+    // Si non, l'ajoute a l archive
+    // Et on supprime toutes les solutions de l archive qui sont dominées par x_prime
+    for (int i = A.size() - 1; i >= 0; i--)
+    {
+        vector<int> y = A[i].second;
+        vector<int> y_prime = eval_x(x_prime);
+        if (dominate(y_prime, y))
+        {
+            A.erase(A.begin() + i);
+        }
+    }
+    A.push_back(make_pair(x_prime, eval_x(x_prime)));
+
+    return true; //return true si x_prime est ajouté dans l archive
+}
+
+vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
+{
+    vector<vector<pair<int, int>>> neighborhood;
+
+    for (int i = 0; i < x.size(); i++)
+    {
+        int temp = x[i].second;
+        for (int j = 0; j < x.size(); j++)
+        {
+            if (i != j)
+            {
+                vector<pair<int, int>> x_prime = x;
+                x_prime[i].second = x_prime[j].second;
+                x_prime[j].second = temp;
+                neighborhood.push_back(x_prime);
+            }
+        }
+        break;
+    }
+    return neighborhood;
+}
+
+bool equal_obj(vector<int> obj, vector<int> obj_prime)
+{
+    for (int i = 0; i < obj.size(); i++)
+    {
+        if (obj[i] != obj_prime[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool dominate(vector<int> obj, vector<int> obj_prime){
 
     /*
     Definition : x domine x_prime SSI
@@ -88,7 +164,7 @@ bool dominate(vector<int> obj, vector<int> obj_prime)
 
     if (stricly_inf_found)
     {
-        return true;
+        return true; // return true if x dominate x_prime
     }
     return false;
 }
@@ -134,20 +210,12 @@ vector<int> eval_x(vector<pair<int, int>> x)
     return obj;
 }
 
-void printTab(int *tab)
-{
-    cout << "printing " << endl;
-    for (int i = 0; i < sizeof(tab); i++)
-    {
-        cout << tab[i] << ' ';
-    }
-}
 
-void print_A(vector<vector<pair<int, int>>> A)
+void print_A(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 {
     cout << "Archive : " << endl;
     for (int i = 0; i < A.size(); i++)
-        print_x(A[i]);
+        print_x(A[i].first);
 }
 
 void print_x(vector<pair<int, int>> x)
@@ -170,9 +238,7 @@ void problem_init(string input_file, int objectif_number, int costs[32][8])
         for (int j = 0; j < problem_size; j++)
         {
             inFile >> costs[i][j];
-            cout << costs[i][j] << ' ';
         }
-        cout << endl;
     }
 
     int optimal_solution_number;
