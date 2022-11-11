@@ -4,26 +4,30 @@
 #include <algorithm>
 #include <map>
 #include <iostream>
+#include <set>
 using namespace std;
+
+const int problem_size = 8;
+const int objectif_number = 4;
+int costs[problem_size * 4][problem_size];
 
 void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
+void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A);
 void print_A(vector<pair<vector<pair<int, int>>, vector<int>>> A);
-void problem_init(string input_file, int objectif_number, int costs[32][8]);
+void problem_init(string input_file, int objectif_number, int costs[problem_size * 4][problem_size]);
 vector<int> eval_x(vector<pair<int, int>> x);
 vector<pair<int, int>> generate_random_solution();
 bool dominate(vector<int> obj1, vector<int> obj_prime);
 vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x);
+vector<vector<pair<int, int>>> horizontal_neighborhood(vector<pair<int, int>> x);
 bool equal_obj(vector<int> obj, vector<int> obj_prime);
 bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
-
-const int problem_size = 8;
-const int objectif_number = 2;
-int costs[problem_size * 4][problem_size];
+vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
 
 int main()
 {
-    string input_file = "input/LAP_8x8_2_obj_SOL.txt";
+    string input_file = "input/15_4.txt";
 
     problem_init(input_file, objectif_number, costs);
 
@@ -32,7 +36,7 @@ int main()
     vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
 
     // Generation aleatoire de l archive
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 500; i++)
     {
         vector<pair<int, int>> x = generate_random_solution();
         vector<int> y = eval_x(x);
@@ -44,14 +48,19 @@ int main()
     P = A;
     P_a.clear();
     while (!P.empty())
-    { 
+    {
         cout << "A size : " << P.size() << endl;
         for (int i = 0; i < P.size(); i++) // P[i].first est la solution courante x
         {
             vector<pair<int, int>> x = P[i].first;
             vector<int> y = P[i].second;
 
-            vector<vector<pair<int, int>>> N = vertical_neighborhood(P[i].first);
+            vector<vector<pair<int, int>>> N;
+            vector<vector<pair<int, int>>> temp;
+            temp = vertical_neighborhood(P[i].first);
+            N.insert(N.end(), temp.begin(), temp.end());
+            temp = horizontal_neighborhood(P[i].first);
+            N.insert(N.end(), temp.begin(), temp.end());
 
             for (int j = 0; j < N.size(); j++) // N[j] est la solution courante x_prime
             {
@@ -62,6 +71,7 @@ int main()
                 {
                     if (update(A, x_prime))
                     {
+                        A = updatingA(A, x_prime);
                         P_a.push_back(make_pair(x_prime, y_prime));
                     }
                 }
@@ -71,27 +81,40 @@ int main()
         P_a.clear();
     };
 
+    cout << A.size() << endl;
+    print_sol(A);
     cout << "end" << endl;
     return 1;
 }
-
 
 bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime)
 {
     // x_prime est-il dominé par une solution de l archive
     // Si oui, on ne fait rien
-    for(int i = 0; i < A.size(); i++) 
+    vector<int> y_prime = eval_x(x_prime);
+    sort(x_prime.begin(), x_prime.end());
+    for (int i = 0; i < A.size(); i++)
     {
         vector<int> y = A[i].second;
-        vector<int> y_prime = eval_x(x_prime);
+        sort(A[i].first.begin(), A[i].first.end());
+
         if (dominate(y, y_prime))
         {
             return false;
         }
+        if (A[i].first == x_prime)
+        {
+            return false;
+        }
     }
+    return true;
+}
 
+vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime)
+{
     // Si non, l'ajoute a l archive
     // Et on supprime toutes les solutions de l archive qui sont dominées par x_prime
+    int size_a = A.size();
     for (int i = A.size() - 1; i >= 0; i--)
     {
         vector<int> y = A[i].second;
@@ -102,8 +125,9 @@ bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int
         }
     }
     A.push_back(make_pair(x_prime, eval_x(x_prime)));
+    cout << "sizes " << size_a << " " << A.size() << endl;
 
-    return true; //return true si x_prime est ajouté dans l archive
+    return A;
 }
 
 vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
@@ -123,7 +147,27 @@ vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
                 neighborhood.push_back(x_prime);
             }
         }
-        break;
+    }
+    return neighborhood;
+}
+
+vector<vector<pair<int, int>>> horizontal_neighborhood(vector<pair<int, int>> x)
+{
+    vector<vector<pair<int, int>>> neighborhood;
+
+    for (int i = 0; i < x.size(); i++)
+    {
+        int temp = x[i].first;
+        for (int j = 0; j < x.size(); j++)
+        {
+            if (i != j)
+            {
+                vector<pair<int, int>> x_prime = x;
+                x_prime[i].first = x_prime[j].first;
+                x_prime[j].first = temp;
+                neighborhood.push_back(x_prime);
+            }
+        }
     }
     return neighborhood;
 }
@@ -140,7 +184,8 @@ bool equal_obj(vector<int> obj, vector<int> obj_prime)
     return true;
 }
 
-bool dominate(vector<int> obj, vector<int> obj_prime){
+bool dominate(vector<int> obj, vector<int> obj_prime)
+{
 
     /*
     Definition : x domine x_prime SSI
@@ -210,12 +255,30 @@ vector<int> eval_x(vector<pair<int, int>> x)
     return obj;
 }
 
-
 void print_A(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 {
     cout << "Archive : " << endl;
     for (int i = 0; i < A.size(); i++)
         print_x(A[i].first);
+}
+
+void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
+{
+    set<vector<int>> printed;
+    cout << "Solutions : " << endl;
+    for (int i = 0; i < A.size(); i++)
+    {
+        if (printed.find(A[i].second) != printed.end())
+        {
+            break;
+        }
+        for (int j = 0; j < A[i].second.size(); j++)
+        {
+            cout << A[i].second[j] << " ";
+        }
+        cout << endl;
+        printed.insert(A[i].second);
+    }
 }
 
 void print_x(vector<pair<int, int>> x)
@@ -226,7 +289,7 @@ void print_x(vector<pair<int, int>> x)
     cout << endl;
 }
 
-void problem_init(string input_file, int objectif_number, int costs[32][8])
+void problem_init(string input_file, int objectif_number, int costs[problem_size * 4][problem_size])
 {
     int problem_size;
     ifstream inFile(input_file);
