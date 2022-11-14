@@ -15,6 +15,9 @@ void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
 void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A);
 void print_A(vector<pair<vector<pair<int, int>>, vector<int>>> A);
+
+void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A);
+
 void problem_init(string input_file, int objectif_number, int costs[problem_size * 4][problem_size]);
 vector<int> eval_x(vector<pair<int, int>> x);
 vector<pair<int, int>> generate_random_solution();
@@ -27,7 +30,7 @@ vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<p
 
 int main()
 {
-    string input_file = "input/15_4.txt";
+    string input_file = "input/8_4.txt";
 
     problem_init(input_file, objectif_number, costs);
 
@@ -83,6 +86,7 @@ int main()
 
     cout << A.size() << endl;
     print_sol(A);
+    save_sol(A);
     cout << "end" << endl;
     return 1;
 }
@@ -281,6 +285,45 @@ void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
     }
 }
 
+void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
+{
+    ofstream outFile;
+    outFile.open("output.txt");
+    set<vector<int>> printed;
+    int nbSol = 0;
+    for (int i = 0; i < A.size(); i++)
+    {
+        if (printed.find(A[i].second) != printed.end())
+        {
+            break;
+        }
+        for (int j = 0; j < A[i].second.size(); j++)
+        {
+            cout << A[i].second[j] << " ";
+        }
+        cout << endl;
+        printed.insert(A[i].second);
+        nbSol++;
+    }
+
+    outFile << nbSol << endl;
+    printed.clear();
+
+    for (int i = 0; i < A.size(); i++)
+    {
+        if (printed.find(A[i].second) != printed.end())
+        {
+            break;
+        }
+        for (int j = 0; j < A[i].second.size(); j++)
+        {
+            outFile << A[i].second[j] << " ";
+        }
+        outFile << endl;
+        printed.insert(A[i].second);
+    }
+}
+
 void print_x(vector<pair<int, int>> x)
 {
     cout << "x : ";
@@ -296,7 +339,7 @@ void problem_init(string input_file, int objectif_number, int costs[problem_size
     inFile >> problem_size;
 
     // Cost matrices
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < problem_size * 4; i++)
     {
         for (int j = 0; j < problem_size; j++)
         {
