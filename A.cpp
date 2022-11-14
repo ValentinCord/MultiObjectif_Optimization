@@ -288,7 +288,7 @@ void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 {
     ofstream outFile;
-    outFile.open("output.txt");
+    outFile.open("sol_8_4.txt");
     set<vector<int>> printed;
     int nbSol = 0;
     for (int i = 0; i < A.size(); i++)
