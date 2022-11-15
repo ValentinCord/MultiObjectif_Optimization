@@ -154,13 +154,23 @@ vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
 
     vector<int> y = eval_x(x);
 
+    vector<int> c1;
+    vector<int> c2;
+    for (int i = 0; i < problem_size; i++)
+    {
+        c1.push_back(i);
+        c2.push_back(i);
+    }
+    random_shuffle(c1.begin(), c1.end());
+    random_shuffle(c2.begin(), c2.end());
+
     for (int i = 0; i < number_iterations_1; i++)
     {
-        int pi = rand() % x.size();
+        int pi = c1[i];
         int temp = x[pi].second;
         for (int j = 0; j < number_iterations_2; j++)
         {
-            int pj = rand() % x.size();
+            int pj = c2[j];
             if (pi != pj)
             {
                 vector<pair<int, int>> x_prime = x;
@@ -176,13 +186,24 @@ vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
 vector<vector<pair<int, int>>> horizontal_neighborhood(vector<pair<int, int>> x)
 {
     vector<vector<pair<int, int>>> neighborhood;
+
+    vector<int> c1;
+    vector<int> c2;
+    for (int i = 0; i < problem_size; i++)
+    {
+        c1.push_back(i);
+        c2.push_back(i);
+    }
+    random_shuffle(c1.begin(), c1.end());
+    random_shuffle(c2.begin(), c2.end());
+
     for (int i = 0; i < number_iterations_1; i++)
     {
-        int pi = rand() % x.size();
+        int pi = c1[i];
         int temp = x[pi].first;
         for (int j = 0; j < number_iterations_2; j++)
         {
-            int pj = rand() % x.size();
+            int pj = c2[j];
             if (pi != pj)
             {
                 vector<pair<int, int>> x_prime = x;
