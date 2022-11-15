@@ -5,11 +5,20 @@
 #include <map>
 #include <iostream>
 #include <set>
+#include <list>
+#include <cmath>
+
+#include "hungarian.h"
+
 using namespace std;
 
-const int problem_size = 8;
+const int problem_size = 30;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
+string input_file = "input/30_4.txt";
+string fileName = "test_30_4.txt";
+int number_iterations_1 = 1;
+int number_iterations_2 = 1;
 
 void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
@@ -28,15 +37,19 @@ bool equal_obj(vector<int> obj, vector<int> obj_prime);
 bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
 vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
 
+vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions();
+vector<pair<int, int>> hungarian_method(list<list<int>> matrix);
+
 int main()
 {
-    string input_file = "input/8_4.txt";
-
     problem_init(input_file, objectif_number, costs);
 
     vector<pair<vector<pair<int, int>>, vector<int>>> A; // Archive de solutions
     vector<pair<vector<pair<int, int>>, vector<int>>> P;
     vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
+
+    // Generation par des combinaisons lineaires
+    A = generate_linear_solutions();
 
     // Generation aleatoire de l archive
     for (int i = 0; i < 500; i++)
@@ -75,6 +88,7 @@ int main()
                     if (update(A, x_prime))
                     {
                         A = updatingA(A, x_prime);
+                        cout << "size A " << A.size() << endl;
                         P_a.push_back(make_pair(x_prime, y_prime));
                     }
                 }
@@ -138,16 +152,20 @@ vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
 {
     vector<vector<pair<int, int>>> neighborhood;
 
-    for (int i = 0; i < x.size(); i++)
+    vector<int> y = eval_x(x);
+
+    for (int i = 0; i < number_iterations_1; i++)
     {
-        int temp = x[i].second;
-        for (int j = 0; j < x.size(); j++)
+        int pi = rand() % x.size();
+        int temp = x[pi].second;
+        for (int j = 0; j < number_iterations_2; j++)
         {
-            if (i != j)
+            int pj = rand() % x.size();
+            if (pi != pj)
             {
                 vector<pair<int, int>> x_prime = x;
-                x_prime[i].second = x_prime[j].second;
-                x_prime[j].second = temp;
+                x_prime[pi].second = x_prime[pj].second;
+                x_prime[pj].second = temp;
                 neighborhood.push_back(x_prime);
             }
         }
@@ -158,17 +176,18 @@ vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x)
 vector<vector<pair<int, int>>> horizontal_neighborhood(vector<pair<int, int>> x)
 {
     vector<vector<pair<int, int>>> neighborhood;
-
-    for (int i = 0; i < x.size(); i++)
+    for (int i = 0; i < number_iterations_1; i++)
     {
-        int temp = x[i].first;
-        for (int j = 0; j < x.size(); j++)
+        int pi = rand() % x.size();
+        int temp = x[pi].first;
+        for (int j = 0; j < number_iterations_2; j++)
         {
-            if (i != j)
+            int pj = rand() % x.size();
+            if (pi != pj)
             {
                 vector<pair<int, int>> x_prime = x;
-                x_prime[i].first = x_prime[j].first;
-                x_prime[j].first = temp;
+                x_prime[pi].first = x_prime[pj].first;
+                x_prime[pj].first = temp;
                 neighborhood.push_back(x_prime);
             }
         }
@@ -288,7 +307,7 @@ void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 {
     ofstream outFile;
-    outFile.open("sol_8_4.txt");
+    outFile.open(fileName);
     set<vector<int>> printed;
     int nbSol = 0;
     for (int i = 0; i < A.size(); i++)
@@ -349,4 +368,74 @@ void problem_init(string input_file, int objectif_number, int costs[problem_size
 
     int optimal_solution_number;
     inFile >> optimal_solution_number;
+}
+
+vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
+{
+    vector<pair<vector<pair<int, int>>, vector<int>>> A;
+    for (int gen = 0; gen < 5; gen++)
+    {
+        int tests[problem_size][problem_size] = {0};
+        for (int i = 0; i < objectif_number; i++)
+        {
+            int coef = rand() % 20;
+
+            for (int i = 0; i < problem_size; i++)
+            {
+                for (int j = 0; j < problem_size; j++)
+                {
+                    tests[i][j] = tests[i][j] + coef * costs[i][j];
+                }
+            }
+        }
+        list<list<int>> matrix;
+
+        for (int i = 0; i < problem_size; i++)
+        {
+            list<int> mi;
+            for (int j = 0; j < problem_size; j++)
+            {
+                mi.push_back(tests[i][j]);
+            }
+            matrix.push_back(mi);
+        }
+
+        vector<pair<int, int>> generated_sol;
+
+        generated_sol = hungarian_method(matrix);
+
+        vector<int> y = eval_x(generated_sol);
+
+        for (int i = 0; i < A.size(); i++)
+        {
+            vector<int> y = A[i].second;
+            sort(A[i].first.begin(), A[i].first.end());
+
+            if (A[i].first != generated_sol)
+            {
+                A.push_back(make_pair(generated_sol, y));
+            }
+        }
+    }
+
+    return A;
+}
+
+vector<pair<int, int>> hungarian_method(list<list<int>> matrix)
+{
+    auto res = hungarian(matrix);
+
+    vector<pair<int, int>> random_sol;
+    for (int i = 0; i < problem_size; i++)
+    {
+        for (int j = 0; j < problem_size; j++)
+        {
+            if (res[i][j] == 1)
+            {
+                random_sol.push_back(make_pair(i, j));
+            }
+        }
+    }
+
+    return random_sol;
 }
