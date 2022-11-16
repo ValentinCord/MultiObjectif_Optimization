@@ -15,8 +15,8 @@ using namespace std;
 const int problem_size = 30;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/30_4.txt";
-string fileName = "test_30_4.txt";
+string input_file = "Data/input/30_4.txt";
+string fileName = "Data/solutions/test_30_4.txt";
 int number_iterations_1 = 1;
 int number_iterations_2 = 1;
 
