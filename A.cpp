@@ -12,13 +12,15 @@
 
 using namespace std;
 
-const int problem_size = 30;
+const int problem_size = 20;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/30_4.txt";
-string fileName = "test_30_4.txt";
-int number_iterations_1 = 1;
-int number_iterations_2 = 1;
+string input_file = "input/20_4.txt";
+string fileName = "test_20_4.txt";
+int number_iterations_1 = 4;
+int number_iterations_2 = 4;
+int random_gen = 500;
+int linear_gen = 500;
 
 void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
@@ -52,7 +54,7 @@ int main()
     A = generate_linear_solutions();
 
     // Generation aleatoire de l archive
-    for (int i = 0; i < 500; i++)
+    for (int i = 0; i < random_gen; i++)
     {
         vector<pair<int, int>> x = generate_random_solution();
         vector<int> y = eval_x(x);
@@ -65,7 +67,7 @@ int main()
     P_a.clear();
     while (!P.empty())
     {
-        cout << "A size : " << P.size() << endl;
+        cout << "P size : " << P.size() << endl;
         for (int i = 0; i < P.size(); i++) // P[i].first est la solution courante x
         {
             vector<pair<int, int>> x = P[i].first;
@@ -394,7 +396,7 @@ void problem_init(string input_file, int objectif_number, int costs[problem_size
 vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
 {
     vector<pair<vector<pair<int, int>>, vector<int>>> A;
-    for (int gen = 0; gen < 5; gen++)
+    for (int gen = 0; gen < linear_gen; gen++)
     {
         int tests[problem_size][problem_size] = {0};
         for (int i = 0; i < objectif_number; i++)
