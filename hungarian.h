@@ -552,7 +552,7 @@ hungarian(const Container<Container<T, Args...>> &original,
     //           << "Optimal assignment: \n"
     //           << M;
 
-    std::cout << output_solution(original, M) << std::endl;
+    // std::cout << output_solution(original, M) << std::endl;
 
     return M;
     // return output_solution(original, M);

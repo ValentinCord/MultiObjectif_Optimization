@@ -12,15 +12,18 @@
 
 using namespace std;
 
-const int problem_size = 20;
+const int problem_size = 15;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/20_4.txt";
-string fileName = "test_20_4.txt";
-int number_iterations_1 = 4;
-int number_iterations_2 = 4;
-int random_gen = 500;
-int linear_gen = 500;
+string input_file = "input/15_4.txt";
+string fileName = "test_15_4.txt";
+int number_iterations_1 = 10;
+int number_iterations_2 = 10;
+int random_gen = 1000;
+
+int max_coef = 7;
+
+vector<vector<int>> vect_cmb;
 
 void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
@@ -40,6 +43,7 @@ bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int
 vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
 
 vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions();
+void combination(int arr[], int data[], int start, int end, int index, int r);
 vector<pair<int, int>> hungarian_method(list<list<int>> matrix);
 
 int main()
@@ -393,21 +397,81 @@ void problem_init(string input_file, int objectif_number, int costs[problem_size
     inFile >> optimal_solution_number;
 }
 
+void combination(int arr[], int data[], int start, int end, int index, int r)
+{
+    if (index == r)
+    {
+        vector<int> soli;
+        for (int j = 0; j < r; j++)
+            soli.push_back(data[j]);
+
+        bool new_cmb = true;
+        for (auto const v : vect_cmb)
+        {
+            if (v == soli)
+            {
+                new_cmb = false;
+                break;
+            }
+        }
+        if (new_cmb)
+        {
+            vect_cmb.push_back(soli);
+        }
+        return;
+    }
+
+    for (int i = start; i <= end &&
+                        end - i + 1 >= r - index;
+         i++)
+    {
+        data[index] = arr[i];
+        combination(arr, data, i + 1,
+                    end, index + 1, r);
+    }
+}
+
 vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
 {
     vector<pair<vector<pair<int, int>>, vector<int>>> A;
-    for (int gen = 0; gen < linear_gen; gen++)
-    {
-        int tests[problem_size][problem_size] = {0};
-        for (int i = 0; i < objectif_number; i++)
-        {
-            int coef = rand() % 20;
 
+    int arr[max_coef * objectif_number + objectif_number - 1];
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int r = objectif_number;
+    int data[r];
+
+    for (int i = 0; i < max_coef + 1; i++)
+    {
+        if (i == 0)
+        {
+            for (int j = 0; j < objectif_number - 1; j++)
+            {
+                arr[j] = i;
+            }
+        }
+        else
+        {
+            int start = i * objectif_number - 1;
+            int end = start + objectif_number;
+            for (int j = start; j < end; j++)
+            {
+                arr[j] = i;
+            }
+        }
+    }
+    combination(arr, data, 0, n - 1, 0, r);
+
+    for (auto const coefs : vect_cmb)
+    {
+
+        int tests[problem_size][problem_size] = {0};
+        for (int k = 0; k < objectif_number; k++)
+        {
             for (int i = 0; i < problem_size; i++)
             {
                 for (int j = 0; j < problem_size; j++)
                 {
-                    tests[i][j] = tests[i][j] + coef * costs[i][j];
+                    tests[i][j] = tests[i][j] + coefs[k] * costs[i + k * problem_size][j];
                 }
             }
         }
@@ -426,21 +490,28 @@ vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
         vector<pair<int, int>> generated_sol;
 
         generated_sol = hungarian_method(matrix);
-
         vector<int> y = eval_x(generated_sol);
+
+        bool new_sol = true;
 
         for (int i = 0; i < A.size(); i++)
         {
             vector<int> y = A[i].second;
             sort(A[i].first.begin(), A[i].first.end());
-
-            if (A[i].first != generated_sol)
+            if (A[i].first == generated_sol)
             {
-                A.push_back(make_pair(generated_sol, y));
+                new_sol = false;
+                break;
             }
+        }
+        if (new_sol)
+        {
+            A.push_back(make_pair(generated_sol, y));
         }
     }
 
+    cout << "size a " << A.size() << endl;
+    ;
     return A;
 }
 
