@@ -12,16 +12,16 @@
 
 using namespace std;
 
-const int problem_size = 15;
+const int problem_size = 30;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/15_4.txt";
-string fileName = "test_15_4.txt";
-int number_iterations_1 = 10;
-int number_iterations_2 = 10;
+string input_file = "input/30_4.txt";
+string fileName = "test_30_4.txt";
+int number_iterations_1 = 4;
+int number_iterations_2 = 4;
 int random_gen = 1000;
 
-int max_coef = 7;
+int max_coef = 5;
 
 vector<vector<int>> vect_cmb;
 
@@ -46,6 +46,8 @@ vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions();
 void combination(int arr[], int data[], int start, int end, int index, int r);
 vector<pair<int, int>> hungarian_method(list<list<int>> matrix);
 
+bool does_exist(vector<vector<int>> &v, vector<int> a);
+
 int main()
 {
     problem_init(input_file, objectif_number, costs);
@@ -64,6 +66,7 @@ int main()
         vector<int> y = eval_x(x);
         A.push_back(make_pair(x, y));
     }
+    save_sol(A);
 
     // Pareto Local Search Algorithm
     cout << "Pareto Local Search Algorithm ..." << endl;
@@ -331,24 +334,37 @@ void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
     }
 }
 
+bool does_exist(vector<vector<int>> &v, vector<int> a)
+{
+
+    for (auto const &vi : v)
+    {
+        if (vi == a)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 {
     ofstream outFile;
     outFile.open(fileName);
-    set<vector<int>> printed;
+    vector<vector<int>> printed;
     int nbSol = 0;
     for (int i = 0; i < A.size(); i++)
     {
-        if (printed.find(A[i].second) != printed.end())
+        if (does_exist(printed, A[i].second))
         {
-            break;
+            continue;
         }
         for (int j = 0; j < A[i].second.size(); j++)
         {
             cout << A[i].second[j] << " ";
         }
         cout << endl;
-        printed.insert(A[i].second);
+        printed.push_back(A[i].second);
         nbSol++;
     }
 
@@ -357,16 +373,16 @@ void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
 
     for (int i = 0; i < A.size(); i++)
     {
-        if (printed.find(A[i].second) != printed.end())
+        if (does_exist(printed, A[i].second))
         {
-            break;
+            continue;
         }
         for (int j = 0; j < A[i].second.size(); j++)
         {
             outFile << A[i].second[j] << " ";
         }
         outFile << endl;
-        printed.insert(A[i].second);
+        printed.push_back(A[i].second);
     }
 }
 
