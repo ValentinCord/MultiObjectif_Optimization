@@ -12,16 +12,16 @@
 
 using namespace std;
 
-const int problem_size = 30;
-const int objectif_number = 4;
+const int problem_size = 8;
+const int objectif_number = 2;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/30_4.txt";
-string fileName = "test_30_4.txt";
+string input_file = "input/8_2.txt";
+string fileName = "aleatoire_8_2.txt";
 int number_iterations_1 = 4;
 int number_iterations_2 = 4;
-int random_gen = 1000;
+int random_gen = 10;
 
-int max_coef = 5;
+int max_coef = 10;
 
 vector<vector<int>> vect_cmb;
 
@@ -59,14 +59,20 @@ int main()
     // Generation par des combinaisons lineaires
     A = generate_linear_solutions();
 
-    // Generation aleatoire de l archive
-    for (int i = 0; i < random_gen; i++)
+    for (auto const v : vect_cmb)
     {
-        vector<pair<int, int>> x = generate_random_solution();
-        vector<int> y = eval_x(x);
-        A.push_back(make_pair(x, y));
+        cout << v << endl;
     }
+
+    // Generation aleatoire de l archive
+    // for (int i = 0; i < random_gen; i++)
+    // {
+    //     vector<pair<int, int>> x = generate_random_solution();
+    //     vector<int> y = eval_x(x);
+    //     A.push_back(make_pair(x, y));
+    // }
     save_sol(A);
+    return 1;
 
     // Pareto Local Search Algorithm
     cout << "Pareto Local Search Algorithm ..." << endl;
@@ -432,7 +438,15 @@ void combination(int arr[], int data[], int start, int end, int index, int r)
         }
         if (new_cmb)
         {
-            vect_cmb.push_back(soli);
+            int i = 0;
+            do
+            {
+                vect_cmb.push_back(soli);
+                int temp = soli[0];
+                soli.erase(soli.begin());
+                soli.push_back(temp);
+                i++;
+            } while (i < objectif_number);
         }
         return;
     }
