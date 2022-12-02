@@ -12,16 +12,15 @@
 
 using namespace std;
 
-const int problem_size = 8;
-const int objectif_number = 2;
+const int problem_size = 20;
+const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/8_2.txt";
-string fileName = "aleatoire_8_2.txt";
-int number_iterations_1 = 4;
-int number_iterations_2 = 4;
-int random_gen = 10;
-
-int max_coef = 10;
+string input_file = "input/20_4.txt";
+string fileName = "test_20_4.txt";
+int number_iterations_1 = 15;
+int number_iterations_2 = 15;
+int random_gen = 10000;
+int max_coef = 2;
 
 vector<vector<int>> vect_cmb;
 
@@ -57,7 +56,7 @@ int main()
     vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
 
     // Generation par des combinaisons lineaires
-    A = generate_linear_solutions();
+    // A = generate_linear_solutions();
 
     for (auto const v : vect_cmb)
     {
@@ -65,14 +64,13 @@ int main()
     }
 
     // Generation aleatoire de l archive
-    // for (int i = 0; i < random_gen; i++)
-    // {
-    //     vector<pair<int, int>> x = generate_random_solution();
-    //     vector<int> y = eval_x(x);
-    //     A.push_back(make_pair(x, y));
-    // }
+    for (int i = 0; i < random_gen; i++)
+    {
+        vector<pair<int, int>> x = generate_random_solution();
+        vector<int> y = eval_x(x);
+        A.push_back(make_pair(x, y));
+    }
     save_sol(A);
-    return 1;
 
     // Pareto Local Search Algorithm
     cout << "Pareto Local Search Algorithm ..." << endl;
