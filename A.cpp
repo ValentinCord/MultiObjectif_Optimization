@@ -7,20 +7,22 @@
 #include <set>
 #include <list>
 #include <cmath>
+#include <chrono>
 
 #include "hungarian.h"
 
 using namespace std;
+using namespace std::chrono;
 
-const int problem_size = 20;
+const int problem_size = 15;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/20_4.txt";
-string fileName = "test_20_4.txt";
-int number_iterations_1 = 15;
-int number_iterations_2 = 15;
-int random_gen = 10000;
-int max_coef = 2;
+string input_file = "input/15_4.txt";
+string fileName = "test/15_4.txt";
+int number_iterations_1 = 5;
+int number_iterations_2 = 5;
+int random_gen = 100;
+int max_coef = 1;
 
 vector<vector<int>> vect_cmb;
 
@@ -39,82 +41,38 @@ vector<vector<pair<int, int>>> vertical_neighborhood(vector<pair<int, int>> x);
 vector<vector<pair<int, int>>> horizontal_neighborhood(vector<pair<int, int>> x);
 bool equal_obj(vector<int> obj, vector<int> obj_prime);
 bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
-vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
+vector<pair<vector<pair<int, int>>, vector<int>>> updatingSol(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime);
 
 vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions();
 void combination(int arr[], int data[], int start, int end, int index, int r);
 vector<pair<int, int>> hungarian_method(list<list<int>> matrix);
-
 bool does_exist(vector<vector<int>> &v, vector<int> a);
+
+vector<pair<vector<pair<int, int>>, vector<int>>> solve();
 
 int main()
 {
-    problem_init(input_file, objectif_number, costs);
+    vector<pair<vector<pair<int, int>>, vector<int>>> A;
 
-    vector<pair<vector<pair<int, int>>, vector<int>>> A; // Archive de solutions
-    vector<pair<vector<pair<int, int>>, vector<int>>> P;
-    vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
+    vector<pair<vector<pair<int, int>>, vector<int>>> sol;
 
-    // Generation par des combinaisons lineaires
-    // A = generate_linear_solutions();
-
-    for (auto const v : vect_cmb)
+    for (int i = 0; i < 20; i++)
     {
-        cout << v << endl;
-    }
-
-    // Generation aleatoire de l archive
-    for (int i = 0; i < random_gen; i++)
-    {
-        vector<pair<int, int>> x = generate_random_solution();
-        vector<int> y = eval_x(x);
-        A.push_back(make_pair(x, y));
-    }
-    save_sol(A);
-
-    // Pareto Local Search Algorithm
-    cout << "Pareto Local Search Algorithm ..." << endl;
-    P = A;
-    P_a.clear();
-    while (!P.empty())
-    {
-        cout << "P size : " << P.size() << endl;
-        for (int i = 0; i < P.size(); i++) // P[i].first est la solution courante x
+        A = solve();
+        cout << "iteration: " << i << endl;
+        bool flag = false;
+        for (int j = 0; j < A.size(); j++)
         {
-            vector<pair<int, int>> x = P[i].first;
-            vector<int> y = P[i].second;
-
-            vector<vector<pair<int, int>>> N;
-            vector<vector<pair<int, int>>> temp;
-            temp = vertical_neighborhood(P[i].first);
-            N.insert(N.end(), temp.begin(), temp.end());
-            temp = horizontal_neighborhood(P[i].first);
-            N.insert(N.end(), temp.begin(), temp.end());
-
-            for (int j = 0; j < N.size(); j++) // N[j] est la solution courante x_prime
+            if (update(sol, A[j].first))
             {
-                vector<pair<int, int>> x_prime = N[j];
-                vector<int> y_prime = eval_x(N[j]);
-
-                if (!dominate(y, y_prime) && !equal_obj(y, y_prime))
-                {
-                    if (update(A, x_prime))
-                    {
-                        A = updatingA(A, x_prime);
-                        cout << "size A " << A.size() << endl;
-                        P_a.push_back(make_pair(x_prime, y_prime));
-                    }
-                }
+                sol = updatingSol(sol, A[j].first);
             }
         }
-        P = P_a;
-        P_a.clear();
-    };
+    }
 
-    cout << A.size() << endl;
-    print_sol(A);
-    save_sol(A);
+    save_sol(sol);
     cout << "end" << endl;
+
     return 1;
 }
 
@@ -141,7 +99,7 @@ bool update(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int
     return true;
 }
 
-vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime)
+vector<pair<vector<pair<int, int>>, vector<int>>> updatingSol(vector<pair<vector<pair<int, int>>, vector<int>>> A, vector<pair<int, int>> x_prime)
 {
     // Si non, l'ajoute a l archive
     // Et on supprime toutes les solutions de l archive qui sont dominées par x_prime
@@ -156,7 +114,6 @@ vector<pair<vector<pair<int, int>>, vector<int>>> updatingA(vector<pair<vector<p
         }
     }
     A.push_back(make_pair(x_prime, eval_x(x_prime)));
-    cout << "sizes " << size_a << " " << A.size() << endl;
 
     return A;
 }
@@ -363,11 +320,7 @@ void save_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A)
         {
             continue;
         }
-        for (int j = 0; j < A[i].second.size(); j++)
-        {
-            cout << A[i].second[j] << " ";
-        }
-        cout << endl;
+
         printed.push_back(A[i].second);
         nbSol++;
     }
@@ -560,4 +513,75 @@ vector<pair<int, int>> hungarian_method(list<list<int>> matrix)
     }
 
     return random_sol;
+}
+
+vector<pair<vector<pair<int, int>>, vector<int>>> solve()
+{
+    // Timer
+    auto start = high_resolution_clock::now();
+
+    problem_init(input_file, objectif_number, costs);
+
+    vector<pair<vector<pair<int, int>>, vector<int>>> A; // Archive de solutions
+    vector<pair<vector<pair<int, int>>, vector<int>>> P;
+    vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
+
+    // Generation par des combinaisons lineaires
+    // A = generate_linear_solutions();
+
+    // Generation aleatoire de l archive
+    for (int i = 0; i < random_gen; i++)
+    {
+        vector<pair<int, int>> x = generate_random_solution();
+        vector<int> y = eval_x(x);
+        A.push_back(make_pair(x, y));
+    }
+
+    // Pareto Local Search Algorithm
+    cout << "Pareto Local Search Algorithm ..." << endl;
+    P = A;
+    P_a.clear();
+    while (!P.empty())
+    {
+        cout << "P size : " << P.size() << endl;
+        for (int i = 0; i < P.size(); i++) // P[i].first est la solution courante x
+        {
+            vector<pair<int, int>> x = P[i].first;
+            vector<int> y = P[i].second;
+
+            vector<vector<pair<int, int>>> N;
+            vector<vector<pair<int, int>>> temp;
+            temp = vertical_neighborhood(P[i].first);
+            N.insert(N.end(), temp.begin(), temp.end());
+            temp = horizontal_neighborhood(P[i].first);
+            N.insert(N.end(), temp.begin(), temp.end());
+
+            for (int j = 0; j < N.size(); j++) // N[j] est la solution courante x_prime
+            {
+                vector<pair<int, int>> x_prime = N[j];
+                vector<int> y_prime = eval_x(N[j]);
+
+                if (!dominate(y, y_prime) && !equal_obj(y, y_prime))
+                {
+                    if (update(A, x_prime))
+                    {
+                        A = updatingSol(A, x_prime);
+                        P_a.push_back(make_pair(x_prime, y_prime));
+                    }
+                }
+            }
+        }
+        P = P_a;
+        P_a.clear();
+    };
+
+    cout << A.size() << endl;
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "Time taken by function: "
+         << duration.count() / 1000 << " milliseconds" << endl;
+
+    return A;
 }

@@ -1,0 +1,38 @@
+// Local search 
+A
+P = A 
+P_a = []
+while P: 
+    for pi in P: 
+        N = []
+        N.append(vertical_neighborhood(pi))
+        N.append(horizontal_neighborhood(pi))
+        for ni in N: 
+            if not dominate(ni, pi): 
+                updatingA(A, ni)
+                P_a.append(ni)
+    P = P_a
+    P_a = []
+
+// neighborhood
+number_iteration = 4
+pi
+c1 
+c2 
+shuffle(c1)
+shuffle(c2)
+for i, ci in enumerate(c1): 
+    for j, cj in enumerate(c2): 
+        if ci != cj:
+            ni = pi 
+            inversion(ni[ci], ni[cj])
+            
+        if j == number_iteration:
+            break
+    
+    if i == number_iteration: 
+        break
+
+
+        
+
