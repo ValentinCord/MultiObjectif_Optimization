@@ -14,15 +14,16 @@
 using namespace std;
 using namespace std::chrono;
 
-const int problem_size = 15;
+const int problem_size = 30;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/15_4.txt";
-string fileName = "test/15_4.txt";
-int number_iterations_1 = 5;
-int number_iterations_2 = 5;
-int random_gen = 100;
-int max_coef = 1;
+string input_file = "input/30_4.txt";
+string fileName = "sol/new_30_4.txt";
+int number_iterations_1 = 3;
+int number_iterations_2 = 3;
+int random_gen = 1000;
+int max_coef = 10;
+int iter = 10;
 
 vector<vector<int>> vect_cmb;
 
@@ -45,7 +46,7 @@ vector<pair<vector<pair<int, int>>, vector<int>>> updatingSol(vector<pair<vector
 
 vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions();
 void combination(int arr[], int data[], int start, int end, int index, int r);
-vector<pair<int, int>> hungarian_method(list<list<int>> matrix);
+vector<pair<int, int>> hungarian_method(int matrix[problem_size * problem_size]);
 bool does_exist(vector<vector<int>> &v, vector<int> a);
 
 vector<pair<vector<pair<int, int>>, vector<int>>> solve();
@@ -56,7 +57,7 @@ int main()
 
     vector<pair<vector<pair<int, int>>, vector<int>>> sol;
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < iter; i++)
     {
         A = solve();
         cout << "iteration: " << i << endl;
@@ -440,11 +441,10 @@ vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
             }
         }
     }
-    combination(arr, data, 0, n - 1, 0, r);
 
+    combination(arr, data, 0, n - 1, 0, r);
     for (auto const coefs : vect_cmb)
     {
-
         int tests[problem_size][problem_size] = {0};
         for (int k = 0; k < objectif_number; k++)
         {
@@ -456,20 +456,19 @@ vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
                 }
             }
         }
-        list<list<int>> matrix;
-
+        int matrix[problem_size * problem_size];
         for (int i = 0; i < problem_size; i++)
         {
             list<int> mi;
             for (int j = 0; j < problem_size; j++)
             {
-                mi.push_back(tests[i][j]);
+                matrix[j + i * problem_size] = tests[i][j];
             }
-            matrix.push_back(mi);
         }
 
-        vector<pair<int, int>> generated_sol;
+        // cout << matrix << endl;
 
+        vector<pair<int, int>> generated_sol;
         generated_sol = hungarian_method(matrix);
         vector<int> y = eval_x(generated_sol);
 
@@ -496,9 +495,10 @@ vector<pair<vector<pair<int, int>>, vector<int>>> generate_linear_solutions()
     return A;
 }
 
-vector<pair<int, int>> hungarian_method(list<list<int>> matrix)
+vector<pair<int, int>> hungarian_method(int matrix[problem_size * problem_size])
 {
-    auto res = hungarian(matrix);
+    Solution ob(problem_size);
+    auto res = ob.assignmentProblem(matrix, problem_size);
 
     vector<pair<int, int>> random_sol;
     for (int i = 0; i < problem_size; i++)
@@ -527,7 +527,7 @@ vector<pair<vector<pair<int, int>>, vector<int>>> solve()
     vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
 
     // Generation par des combinaisons lineaires
-    // A = generate_linear_solutions();
+    A = generate_linear_solutions();
 
     // Generation aleatoire de l archive
     for (int i = 0; i < random_gen; i++)
