@@ -14,19 +14,24 @@
 using namespace std;
 using namespace std::chrono;
 
-const int problem_size = 30;
+const int problem_size = 15;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/30_4.txt";
-string fileName = "sol/new_30_4.txt";
+string input_file = "input/15_4.txt";
+string fileName = "sol/new_15_4.txt";
 int number_iterations_1 = 3;
 int number_iterations_2 = 3;
 int random_gen = 1000;
-int max_coef = 10;
-int iter = 10;
+int max_coef = 5;
+vector<pair<vector<pair<int, int>>, vector<int>>> G_A;
+int iter = 5;
+
+int maxTime = 10;
+
+// Timer
+auto start = high_resolution_clock::now();
 
 vector<vector<int>> vect_cmb;
-
 void printTab(int *tab);
 void print_x(vector<pair<int, int>> x);
 void print_sol(vector<pair<vector<pair<int, int>>, vector<int>>> A);
@@ -54,7 +59,6 @@ vector<pair<vector<pair<int, int>>, vector<int>>> solve();
 int main()
 {
     vector<pair<vector<pair<int, int>>, vector<int>>> A;
-
     vector<pair<vector<pair<int, int>>, vector<int>>> sol;
 
     for (int i = 0; i < iter; i++)
@@ -62,12 +66,21 @@ int main()
         A = solve();
         cout << "iteration: " << i << endl;
         bool flag = false;
+        long long int count = 0;
         for (int j = 0; j < A.size(); j++)
         {
             if (update(sol, A[j].first))
             {
                 sol = updatingSol(sol, A[j].first);
+                count++;
             }
+        }
+
+        if (duration_cast<seconds>(high_resolution_clock::now() - start) >= seconds(maxTime))
+        {
+            auto duration = duration_cast<seconds>(high_resolution_clock::now() - start);
+            cout << "End time: " << duration.count() << endl;
+            break;
         }
     }
 
@@ -517,9 +530,6 @@ vector<pair<int, int>> hungarian_method(int matrix[problem_size * problem_size])
 
 vector<pair<vector<pair<int, int>>, vector<int>>> solve()
 {
-    // Timer
-    auto start = high_resolution_clock::now();
-
     problem_init(input_file, objectif_number, costs);
 
     vector<pair<vector<pair<int, int>>, vector<int>>> A; // Archive de solutions
@@ -527,7 +537,12 @@ vector<pair<vector<pair<int, int>>, vector<int>>> solve()
     vector<pair<vector<pair<int, int>>, vector<int>>> P_a;
 
     // Generation par des combinaisons lineaires
-    A = generate_linear_solutions();
+    if (G_A.empty())
+    {
+        cout << "filling GA" << endl;
+        G_A = generate_linear_solutions();
+    }
+    A = G_A;
 
     // Generation aleatoire de l archive
     for (int i = 0; i < random_gen; i++)
@@ -541,6 +556,7 @@ vector<pair<vector<pair<int, int>>, vector<int>>> solve()
     cout << "Pareto Local Search Algorithm ..." << endl;
     P = A;
     P_a.clear();
+
     while (!P.empty())
     {
         cout << "P size : " << P.size() << endl;
@@ -570,18 +586,17 @@ vector<pair<vector<pair<int, int>>, vector<int>>> solve()
                     }
                 }
             }
+            if (duration_cast<seconds>(high_resolution_clock::now() - start) >= seconds(maxTime))
+            {
+                cout << "End time" << endl;
+                break;
+            }
         }
         P = P_a;
         P_a.clear();
     };
 
     cout << A.size() << endl;
-
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-
-    cout << "Time taken by function: "
-         << duration.count() / 1000 << " milliseconds" << endl;
 
     return A;
 }
