@@ -3,11 +3,11 @@ import pygmo as pg
 from pygmo import hypervolume
 import numpy as np
 
-with open("sol/new_20_4.txt", 'r') as fin: 
+with open("sol/kev/30.txt", 'r') as fin: 
     n = int(fin.readline())
     front_a = [list(map(int,fin.readline().split())) for i in range(n)]
 
-with open("sol/test_20_4.txt", 'r') as fin: 
+with open("sol/tanguy/30.txt", 'r') as fin: 
     n = int(fin.readline())
     front_b = [list(map(int,fin.readline().split())) for i in range(n)]
 

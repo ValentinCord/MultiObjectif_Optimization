@@ -14,19 +14,19 @@
 using namespace std;
 using namespace std::chrono;
 
-const int problem_size = 15;
+const int problem_size = 30;
 const int objectif_number = 4;
 int costs[problem_size * 4][problem_size];
-string input_file = "input/15_4.txt";
-string fileName = "sol/new_15_4.txt";
-int number_iterations_1 = 3;
-int number_iterations_2 = 3;
+string input_file = "input/30_4.txt";
+string fileName = "sol/30.txt";
+int number_iterations_1 = 25;
+int number_iterations_2 = 25;
 int random_gen = 1000;
-int max_coef = 5;
+int max_coef = 7;
 vector<pair<vector<pair<int, int>>, vector<int>>> G_A;
-int iter = 5;
+int iter = 2;
 
-int maxTime = 10;
+int maxTime = 172800;
 
 // Timer
 auto start = high_resolution_clock::now();
